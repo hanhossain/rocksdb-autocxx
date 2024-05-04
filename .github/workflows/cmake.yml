@@ -35,22 +35,23 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "cxx-source=${{ github.workspace }}/rocksdb-cxx" >> "$GITHUB_OUTPUT"
     - name: Install dependencies
       run: ${{ matrix.deps }}
     - name: Configure CMake
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -G Ninja
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         -DCMAKE_COLOR_DIAGNOSTICS=ON
         -DWITH_ALL_TESTS=OFF
-        -S ${{ github.workspace }}
+        -S ${{ steps.strings.outputs.cxx-source }}
     - name: Build
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ninja
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }} -j ${{ matrix.cpus }}
+      run: ctest --build-config ${{ env.BUILD_TYPE }} -j ${{ matrix.cpus }}
 
   test:
     runs-on: ${{ matrix.os }}
@@ -77,15 +78,15 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -G Ninja
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         -DCMAKE_COLOR_DIAGNOSTICS=ON
-        -S ${{ github.workspace }}
+        -S ${{ steps.strings.outputs.cxx-source }}
     - name: Build
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ninja
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }} -j ${{ matrix.cpus }}
+      run: ctest --build-config ${{ env.BUILD_TYPE }} -j ${{ matrix.cpus }}
 
   build-examples:
     runs-on: ${{ matrix.os }}
@@ -110,11 +111,11 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -G Ninja
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         -DCMAKE_COLOR_DIAGNOSTICS=ON
         -DWITH_TESTS=OFF
         -DWITH_EXAMPLES=ON
-        -S ${{ github.workspace }}
+        -S ${{ steps.strings.outputs.cxx-source }}
     - name: Build
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ninja
