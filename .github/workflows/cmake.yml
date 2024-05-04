@@ -1,0 +1,120 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: cmake-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  BUILD_TYPE: Debug
+  CC: clang
+  CXX: clang++
+  
+jobs:
+  basic-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          deps: sudo apt-get install -y ninja-build libgflags-dev
+          cpus: 4
+        - os: macos-latest
+          deps: brew install ninja gflags
+          cpus: 3
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+    - name: Install dependencies
+      run: ${{ matrix.deps }}
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -G Ninja
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_COLOR_DIAGNOSTICS=ON
+        -DWITH_ALL_TESTS=OFF
+        -S ${{ github.workspace }}
+    - name: Build
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ninja
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config ${{ matrix.build_type }} -j ${{ matrix.cpus }}
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          deps: sudo apt-get install -y ninja-build libgflags-dev
+          cpus: 4
+        - os: macos-latest
+          deps: brew install ninja gflags
+          cpus: 3
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+    - name: Install dependencies
+      run: ${{ matrix.deps }}
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -G Ninja
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_COLOR_DIAGNOSTICS=ON
+        -S ${{ github.workspace }}
+    - name: Build
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ninja
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config ${{ matrix.build_type }} -j ${{ matrix.cpus }}
+
+  build-examples:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          deps: sudo apt-get install -y ninja-build libgflags-dev
+        - os: macos-latest
+          deps: brew install ninja gflags
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+    - name: Install dependencies
+      run: ${{ matrix.deps }}
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -G Ninja
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_COLOR_DIAGNOSTICS=ON
+        -DWITH_TESTS=OFF
+        -DWITH_EXAMPLES=ON
+        -S ${{ github.workspace }}
+    - name: Build
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ninja
