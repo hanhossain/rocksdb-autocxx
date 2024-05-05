@@ -72,6 +72,7 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "cxx-source=${{ github.workspace }}/rocksdb-cxx" >> "$GITHUB_OUTPUT"
     - name: Install dependencies
       run: ${{ matrix.deps }}
     - name: Configure CMake
@@ -105,6 +106,7 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "cxx-source=${{ github.workspace }}/rocksdb-cxx" >> "$GITHUB_OUTPUT"
     - name: Install dependencies
       run: ${{ matrix.deps }}
     - name: Configure CMake
